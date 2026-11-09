@@ -105,7 +105,7 @@ $env:Path = ($adds -join ';') + ';' + $env:Path
 Step 'Android SDK packages (accepting licenses)'
 $yes = "y`n" * 60
 $yes | & sdkmanager.bat "--sdk_root=$Sdk" --licenses | Out-Null
-$packages = @('platform-tools', 'build-tools;35.0.0', 'platforms;android-35')
+$packages = @('platform-tools', 'build-tools;28.0.3', 'build-tools;35.0.0', 'platforms;android-35', 'platforms;android-36')
 if (-not $SkipEmulator) { $packages += @('emulator', 'system-images;android-35;google_apis;x86_64') }
 & sdkmanager.bat "--sdk_root=$Sdk" @packages
 if (-not $SkipEmulator) {
@@ -122,7 +122,7 @@ Step 'Project dependencies'
 Push-Location $Repo
 try {
   & flutter pub get
-  & dart run build_runner build -d
+  & dart run build_runner build
 } finally { Pop-Location }
 
 Write-Host "`nDone. Open a NEW PowerShell window, then run:  scripts\dev.ps1" -ForegroundColor Green

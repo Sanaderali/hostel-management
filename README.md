@@ -38,7 +38,7 @@ and BIOS virtualization). UI-only demo without the server: `flutter run --dart-d
 ```bash
 cd server && npm start          # API on :8080 (dev DB in server/data/, demo data seeded)
 cd server && npm test           # API tests
-flutter pub get && dart run build_runner build -d
+flutter pub get && dart run build_runner build
 flutter analyze && flutter test
 flutter test integration_test/app_test.dart -d <device>   # end-to-end against the local server
 ```
