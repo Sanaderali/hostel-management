@@ -36,12 +36,21 @@ function Install-Zip($name, $url, $target) {
   $zip = Join-Path $Downloads "$name.zip"
   if (-not (Test-Path $zip)) {
     Write-Host "Downloading $name ..."
-    Invoke-WebRequest -Uri $url -OutFile $zip -UseBasicParsing
+    $part = "$zip.part"                      # a half-finished download never looks complete
+    Invoke-WebRequest -Uri $url -OutFile $part -UseBasicParsing
+    Move-Item $part $zip
   }
   $tmp = Join-Path $Root "_tmp_$name"
   if (Test-Path $tmp) { Remove-Item $tmp -Recurse -Force }
   Write-Host "Extracting $name ..."
-  Expand-Archive -Path $zip -DestinationPath $tmp
+  New-Item -ItemType Directory -Force $tmp | Out-Null
+  $tar = Join-Path $env:SystemRoot 'System32\tar.exe'   # much faster than Expand-Archive
+  if (Test-Path $tar) {
+    & $tar -xf $zip -C $tmp
+    if ($LASTEXITCODE -ne 0) { throw "Extracting $name failed. Delete $zip and run the script again." }
+  } else {
+    Expand-Archive -Path $zip -DestinationPath $tmp -Force
+  }
   $inner = Get-ChildItem $tmp | Select-Object -First 1      # every zip has one top folder
   New-Item -ItemType Directory -Force (Split-Path $target) | Out-Null
   Move-Item $inner.FullName $target
