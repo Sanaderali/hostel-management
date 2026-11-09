@@ -1,5 +1,7 @@
 import 'dart:async';
+
 import 'package:drift/drift.dart';
+
 import '../database/app_database.dart';
 import 'remote_data_source.dart';
 
@@ -29,26 +31,24 @@ class SyncEngine {
   }
 
   Future<void> _push() async {
-    final items = await (_db.select(_db.outbox)
-          ..orderBy([(t) => OrderingTerm.asc(t.seq)]))
-        .get();
+    final items = await (_db.select(_db.outbox)..orderBy([(t) => OrderingTerm.asc(t.seq)])).get();
     for (final item in items) {
       try {
         await _remote.push(item);
         await (_db.delete(_db.outbox)..where((t) => t.seq.equals(item.seq))).go();
       } catch (_) {
-        await (_db.update(_db.outbox)..where((t) => t.seq.equals(item.seq)))
-            .write(OutboxCompanion(attempts: Value(item.attempts + 1)));
+        await (_db.update(_db.outbox)..where((t) => t.seq.equals(item.seq))).write(
+          OutboxCompanion(attempts: Value(item.attempts + 1)),
+        );
         return; // keep ordering; retry on next sync
       }
     }
   }
 
   Future<void> _pull(SyncHandler h) async {
-    var cursor = await (_db.select(_db.syncCursors)
-          ..where((t) => t.entity.equals(h.entity)))
-        .getSingleOrNull()
-        .then((r) => r?.cursor);
+    var cursor = await (_db.select(
+      _db.syncCursors,
+    )..where((t) => t.entity.equals(h.entity))).getSingleOrNull().then((r) => r?.cursor);
     while (true) {
       final res = await _remote.pull(h.entity, cursor);
       await _db.transaction(() async {
@@ -56,8 +56,11 @@ class SyncEngine {
           await h.applyRemote(json);
         }
         if (res.nextCursor != null) {
-          await _db.into(_db.syncCursors).insertOnConflictUpdate(
-              SyncCursorsCompanion.insert(entity: h.entity, cursor: res.nextCursor!));
+          await _db
+              .into(_db.syncCursors)
+              .insertOnConflictUpdate(
+                SyncCursorsCompanion.insert(entity: h.entity, cursor: res.nextCursor!),
+              );
         }
       });
       cursor = res.nextCursor ?? cursor;

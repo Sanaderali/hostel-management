@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'app_database.g.dart';
 
@@ -51,15 +52,29 @@ class SyncCursors extends Table {
 @DriftDatabase(tables: [Students, Bills, Outbox, SyncCursors])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
-      : super(executor ?? driftDatabase(name: 'hostel_db'));
+    : super(
+        executor ??
+            driftDatabase(
+              name: 'hostel_db',
+              // App-private data dir (not the user's visible Documents folder).
+              native: DriftNativeOptions(databaseDirectory: getApplicationSupportDirectory),
+            ),
+      );
 
   @override
   int get schemaVersion => 1;
 
+  /// Removes all local data (used on sign-out).
+  Future<void> wipe() => transaction(() async {
+    for (final t in allTables) {
+      await delete(t).go();
+    }
+  });
+
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (m, from, to) async {
-          // Add stepwise migrations here as modules add tables/columns.
-        },
-      );
+    onUpgrade: (m, from, to) async {
+      // Add stepwise migrations here as modules add tables/columns.
+    },
+  );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../providers.dart';
 
 /// Shows "Offline" and/or the number of changes waiting to sync.
@@ -16,8 +17,10 @@ class SyncBanner extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: online ? cs.primaryContainer : cs.errorContainer,
       child: Text(
-        [if (!online) 'Offline — changes are saved on this device', if (pending > 0) '$pending waiting to sync']
-            .join(' · '),
+        [
+          if (!online) 'Offline — changes are saved on this device',
+          if (pending > 0) '$pending waiting to sync',
+        ].join(' · '),
         style: Theme.of(context).textTheme.labelMedium,
       ),
     );

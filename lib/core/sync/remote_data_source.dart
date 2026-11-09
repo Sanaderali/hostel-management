@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+
 import '../database/app_database.dart';
 import '../entitlements/entitlements.dart';
 
@@ -25,13 +26,14 @@ class ApiRemoteDataSource implements RemoteDataSource {
   final Dio _dio;
 
   @override
-  Future<void> push(OutboxItem item) => _dio.post('/sync/${item.entity}',
-      data: {'op': item.op, 'id': item.entityId, 'data': item.payload});
+  Future<void> push(OutboxItem item) => _dio.post(
+    '/sync/${item.entity}',
+    data: {'op': item.op, 'id': item.entityId, 'data': item.payload},
+  );
 
   @override
   Future<PullResult> pull(String entity, String? cursor) async {
-    final r = await _dio.get('/sync/$entity',
-        queryParameters: {'since': ?cursor});
+    final r = await _dio.get('/sync/$entity', queryParameters: {'since': ?cursor});
     final d = r.data as Map<String, dynamic>;
     return PullResult(
       (d['items'] as List).cast<Map<String, dynamic>>(),
@@ -58,30 +60,30 @@ class MockRemoteDataSource implements RemoteDataSource {
     final now = DateTime.now().toUtc().toIso8601String();
     final items = switch (entity) {
       'students' => [
-          for (final (i, n) in ['Moazam Naveed', 'Ali Khan', 'Usman Tariq', 'Hamza Shah'].indexed)
-            {
-              'id': 'stu-$i',
-              'name': n,
-              'course': 'Bs.c Chemistry',
-              'phone': '+92 333 444 545$i',
-              'location': 'Mingora swat, Pakistan',
-              'room': '${27 + i}',
-              'inHostel': i != 2,
-              'updatedAt': now,
-            }
-        ],
+        for (final (i, n) in ['Moazam Naveed', 'Ali Khan', 'Usman Tariq', 'Hamza Shah'].indexed)
+          {
+            'id': 'stu-$i',
+            'name': n,
+            'course': 'Bs.c Chemistry',
+            'phone': '+92 333 444 545$i',
+            'location': 'Mingora swat, Pakistan',
+            'room': '${27 + i}',
+            'inHostel': i != 2,
+            'updatedAt': now,
+          },
+      ],
       'bills' => [
-          for (final (i, t) in ['electricity', 'water', 'gas'].indexed)
-            {
-              'id': 'bill-$i',
-              'studentId': null,
-              'type': t,
-              'month': '2022-08',
-              'amount': 1200.0 + i * 350,
-              'paid': t == 'water',
-              'updatedAt': now,
-            }
-        ],
+        for (final (i, t) in ['electricity', 'water', 'gas'].indexed)
+          {
+            'id': 'bill-$i',
+            'studentId': null,
+            'type': t,
+            'month': '2022-08',
+            'amount': 1200.0 + i * 350,
+            'paid': t == 'water',
+            'updatedAt': now,
+          },
+      ],
       _ => <Map<String, dynamic>>[],
     };
     return PullResult(items, nextCursor: now);
