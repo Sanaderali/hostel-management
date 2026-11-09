@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,8 +12,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _email = TextEditingController();
-  final _password = TextEditingController();
+  // Debug builds only: pre-filled with the seeded demo owner so a slow emulator
+  // keyboard is not needed. Release builds start empty.
+  final _email = TextEditingController(text: kDebugMode ? 'owner@demo.local' : '');
+  final _password = TextEditingController(text: kDebugMode ? 'owner12345' : '');
   String? _error;
   bool _busy = false;
 
