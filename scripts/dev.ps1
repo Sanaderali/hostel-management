@@ -4,7 +4,7 @@
     scripts\dev.ps1 -Device <id>         -> a specific device (see: flutter devices)
     scripts\dev.ps1 -HostIp 192.168.1.5  -> real phone on the same Wi-Fi (use your PC's IP)
 #>
-param([string]$Device = '', [string]$HostIp = '', [string]$Root = 'D:\dev')
+param([string]$Device = '', [string]$HostIp = '', [string]$Root = 'D:\dev', [string]$Gpu = 'host')
 $ErrorActionPreference = 'Stop'
 
 # Works even in a terminal opened before setup (stale PATH): point at the D:\dev tools directly.
@@ -36,7 +36,10 @@ if (-not $Device) {
   $Device = Get-AndroidDevice
   if (-not $Device) {
     Write-Host 'Starting emulator hostel_pixel (first boot can take 2-4 minutes) ...'
-    & flutter emulators --launch hostel_pixel
+    # Launch directly so we can pass speed flags (-gpu host = use the real graphics chip).
+    # If the emulator window is black/crashes, retry with:  scripts\dev.ps1 -Gpu angle_indirect
+    Start-Process -FilePath "$Sdk\emulator\emulator.exe" -ArgumentList @(
+      '-avd', 'hostel_pixel', '-gpu', $Gpu, '-memory', '3072', '-no-snapshot-load', '-no-metrics')
     for ($i = 0; $i -lt 100 -and -not $Device; $i++) { Start-Sleep -Seconds 3; $Device = Get-AndroidDevice }
     if (-not $Device) { throw 'Emulator did not start. Run: emulator -avd hostel_pixel   and read the message.' }
     Write-Host "Waiting for $Device to finish booting ..."
